@@ -5,8 +5,10 @@ module NaiveBayes =
     open System
     open System.Text.RegularExpressions
 
+    let options = RegexOptions.Compiled ||| RegexOptions.IgnoreCase
+
     // Regular Expression matching full words, case insensitive.
-    let matchWords = new Regex(@"\w+", RegexOptions.IgnoreCase)
+    let matchWords = new Regex(@"\w+", options)
 
     // Extract and count words from a string.
     // http://stackoverflow.com/a/2159085/114519        

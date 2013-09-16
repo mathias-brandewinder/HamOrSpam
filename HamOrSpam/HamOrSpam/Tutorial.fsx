@@ -144,7 +144,8 @@ the probabilities of each token into one aggregate
 probability.
 Instead of coding it from scratch, we'll use then
 basic implementation from NaiveBayes.fs
-Below is an illustration on how to train a classifier.
+Below is an illustration on how to train a classifier,
+and use some of the built-in functions.
 *)
 
 let testTokens = ["chat"; "800"; "mom"; "ringtone"; "prize"; "now" ] |> Set.ofList
@@ -153,3 +154,112 @@ let testClassifier = classifier bagOfWords trainingSample testTokens
 validationSample.[0..19]
 |> Array.iter (fun (cl, text) -> printfn "%A -> %A / %s" cl (testClassifier text) text)
 
+let tokens = extractWords trainingSample
+
+let frequency = bagOfWords (prepare trainingSample) tokens
+let mostFrequent =
+    frequency
+    |> Map.toArray
+    |> Array.sortBy snd
+    |> Array.rev
+    |> fun x -> x.[..20]
+
+(*
+Might be worth getting rid of stop-words...
+*)
+
+// http://www.textfixer.com/resources/common-english-words.txt
+let stopWords = 
+    let asString = "a,able,about,across,after,all,almost,also,am,among,an,and,any,are,as,at,be,because,been,but,by,can,cannot,could,dear,did,do,does,either,else,ever,every,for,from,get,got,had,has,have,he,her,hers,him,his,how,however,i,if,in,into,is,it,its,just,least,let,like,likely,may,me,might,most,must,my,neither,no,nor,not,of,off,often,on,only,or,other,our,own,rather,said,say,says,she,should,since,so,some,than,that,the,their,them,then,there,these,they,this,tis,to,too,twas,us,wants,was,we,were,what,when,where,which,while,who,whom,why,will,with,would,yet,you,your"
+    asString.Split(',') |> Set.ofArray
+
+let cleanTokens = 
+    stopWords 
+    |> Set.fold (fun clean stopW -> Set.remove stopW clean) tokens
+
+let topSpam =
+    let spam = 
+        trainingSample
+        |> Array.filter (fun x -> fst x = Spam)
+    let freq = bagOfWords (prepare spam) cleanTokens
+    freq
+    |> Map.toArray
+    |> Array.sortBy snd
+    |> Array.rev
+    |> fun x -> x.[..50]
+
+let topHam = 
+    let ham = 
+        trainingSample
+        |> Array.filter (fun x -> fst x = Ham)
+    let freq = bagOfWords (prepare ham) cleanTokens
+    freq
+    |> Map.toArray
+    |> Array.sortBy snd
+    |> Array.rev
+    |> fun x -> x.[..50]
+
+let common = 
+    Set.union 
+        (topSpam |> Array.map fst |> Set.ofArray) 
+        (topHam |> Array.map fst |> Set.ofArray) 
+
+let classify = classifier bagOfWords trainingSample common
+
+validationSample.[0..199]
+|> Array.map (fun (cl, text) -> if cl = (classify text) then 1. else 0.)
+|> Array.average
+
+(*
+How about these phone numbers? Can we make them into a feature?
+*)
+
+let withNumbers =
+
+    // super dirty phone number extraction
+    let numbers = Regex(@"\d{3,}")
+    let replacePhone (text: string) = numbers.Replace(text, "phone_number")
+
+    let trainingSample = 
+        trainingSample 
+        |> Array.map (fun (cl, txt) -> cl, replacePhone txt)
+
+    let tokens = extractWords trainingSample
+    let cleanTokens = 
+        stopWords 
+        |> Set.fold (fun clean stopW -> Set.remove stopW clean) tokens
+
+    let topSpam =
+        let spam = 
+            trainingSample
+            |> Array.filter (fun x -> fst x = Spam)
+        let freq = bagOfWords (prepare spam) cleanTokens
+        freq
+        |> Map.toArray
+        |> Array.sortBy snd
+        |> Array.rev
+        |> fun x -> x.[..50]
+
+    let topHam = 
+        let ham = 
+            trainingSample
+            |> Array.filter (fun x -> fst x = Ham)
+        let freq = bagOfWords (prepare ham) cleanTokens
+        freq
+        |> Map.toArray
+        |> Array.sortBy snd
+        |> Array.rev
+        |> fun x -> x.[..50]
+
+    let common = 
+        Set.union 
+            (topSpam |> Array.map fst |> Set.ofArray) 
+            (topHam |> Array.map fst |> Set.ofArray) 
+
+    let classify = classifier bagOfWords trainingSample common
+
+    validationSample.[0..199]
+    |> Array.map (fun (cl, text) -> cl, replacePhone text)
+    |> Array.map (fun (cl, text) -> if cl = (classify text) then 1. else 0.)
+    |> Array.average
+    |> printfn "Correct: %f"

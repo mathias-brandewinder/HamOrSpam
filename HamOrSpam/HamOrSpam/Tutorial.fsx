@@ -186,7 +186,7 @@ let topSpam =
     |> Map.toArray
     |> Array.sortBy snd
     |> Array.rev
-    |> fun x -> x.[..50]
+    |> fun x -> x.[..10]
 
 let topHam = 
     let ham = 
@@ -197,7 +197,7 @@ let topHam =
     |> Map.toArray
     |> Array.sortBy snd
     |> Array.rev
-    |> fun x -> x.[..50]
+    |> fun x -> x.[..10]
 
 let common = 
     Set.union 
@@ -209,6 +209,7 @@ let classify = classifier bagOfWords trainingSample common
 validationSample.[0..199]
 |> Array.map (fun (cl, text) -> if cl = (classify text) then 1. else 0.)
 |> Array.average
+|> printfn "Correct: %f"
 
 (*
 How about these phone numbers? Can we make them into a feature?
@@ -238,7 +239,7 @@ let withNumbers =
         |> Map.toArray
         |> Array.sortBy snd
         |> Array.rev
-        |> fun x -> x.[..50]
+        |> fun x -> x.[..10]
 
     let topHam = 
         let ham = 
@@ -249,7 +250,7 @@ let withNumbers =
         |> Map.toArray
         |> Array.sortBy snd
         |> Array.rev
-        |> fun x -> x.[..50]
+        |> fun x -> x.[..10]
 
     let common = 
         Set.union 

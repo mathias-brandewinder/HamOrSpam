@@ -114,16 +114,20 @@ module NaiveBayes =
     // and returning the highest scoring label.
     // Probabilities are log-transformed to avoid underflow.
     // See "Chapter4.fsx" for an illustration.
-    let classifier frequency dataset words text =
-        let estimator = train frequency dataset words
-        let tokenized = vocabulary text
-        estimator
-        |> Seq.map (fun (label, proba, tokens) ->
-            label,
-            tokens
-            |> Map.fold (fun p token value -> 
-                if Set.exists (fun w -> w = token) tokenized 
-                then p + log(value) 
-                else p) (log proba))
-        |> Seq.maxBy snd
-        |> fst
+    let classifier frequency dataset words =
+        let estimator = 
+            train frequency dataset words 
+            |> Seq.toArray
+        let classify text =
+            let tokenized = vocabulary text
+            estimator
+            |> Seq.map (fun (label, proba, tokens) ->
+                label,
+                tokens
+                |> Map.fold (fun p token value -> 
+                    if Set.exists (fun w -> w = token) tokenized 
+                    then p + log(value) 
+                    else p) (log proba))
+            |> Seq.maxBy snd
+            |> fst
+        classify

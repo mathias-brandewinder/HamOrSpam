@@ -56,8 +56,14 @@ help your machine get smart!
 *)
 
 
+// let's look at the 20 first "ham" items
+let ham_20 = 
+    trainingSample
+    |> Array.filter (fun (cl, txt) -> cl = Ham)
+    |> Seq.take 20
+    |> Seq.iter (fun (cl, txt) -> printfn "%s" txt)
 
-// TODO: DISPLAY 20 FIRST HAM, 20 FIRST SPAM SMS
+// TODO: DISPLAY 20 FIRST SPAM SMS
 
 
 
@@ -195,7 +201,8 @@ let frequency = bagOfWords (prepare trainingSample) tokens
 
 
 // TODO: MOST FREQUENT TOKENS IN HAM, SPAM?
-
+// Hint: Map.toSeq will convert a Map<a,b> 
+// into a sequence of tuples (a,b)
 
 
 (* **********************************************
@@ -218,6 +225,7 @@ let stopWords =
 
 
 // TODO: CLEAN TOKENS = TOKENS - STOP WORDS
+
 
 // TODO, AGAIN: MOST FREQUENT TOKENS IN HAM, SPAM?
 
@@ -255,13 +263,16 @@ Can we make them into a feature / token?
 
 let numbersRegex = Regex(@"\d{3,}")
 let replaceNumbers (text: string) = numbersRegex.Replace(text, "__number__")
-
+let exampleReplacement = "Call 1800123456 for your free spam" |> replaceNumbers
 
 
 // TODO: PRE-PROCESS TEXT TO DEAL WITH "NUMBERS":
 // REPLACE NUMBERS WITH __number__
 
-// TODO: EVALUATE QUALITY USING NEW FEATURE
+
+// TODO: TRAIN A CLASSIFIER ON PRE-PROCESSED
+// TRAINING SET, AND EVALUATE QUALITY 
+// USING THAT NEW FEATURE
 // ON 200 FIRST SMS FROM VALIDATION,
 // AND COMPUTE % CORRECTLY CLASSIFIED
 
